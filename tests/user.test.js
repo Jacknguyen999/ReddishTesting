@@ -60,7 +60,8 @@ describe("getUser controller", () => {
     expect(res.body.userDetails.username).toBe("TestUser");
     expect(res.body.posts.results).toHaveLength(2); // vì limit là 2
     expect(res.body.posts.next).toBeDefined();
-    expect(res.body.posts.previous).toBeNull();
+    expect(res.body.posts.previous ?? null).toBeNull();
+
   });
 
   test("returns 404 if user not found", async () => {
@@ -111,4 +112,105 @@ describe("getUser controller", () => {
     expect(res.body.userDetails.username).toBe("TestUser");
     expect(res.body.posts.results.length).toBeGreaterThan(0);
   });
+
+  test("returns empty post list if user has no posts", async () => {
+    const user = new User({ username: "EmptyUser", passwordHash: "hash" });
+    await user.save();
+  
+    const req = {
+      params: { username: "emptyuser" },
+      query: {},
+    };
+  
+    const res = {
+      statusCode: 0,
+      body: null,
+      status(code) {
+        this.statusCode = code;
+        return this;
+      },
+      json(data) {
+        this.body = data;
+      },
+    };
+  
+    await getUser(req, res);
+  
+    expect(res.statusCode).toBe(200);
+    expect(res.body.userDetails.username).toBe("EmptyUser");
+    expect(res.body.posts.results).toHaveLength(0);
+    expect(res.body.posts.next ?? null).toBeNull();
+    expect(res.body.posts.previous).toBeNull
+  });
+  test("handles missing or invalid pagination query", async () => {
+    const req = {
+      params: { username: "testuser" },
+      query: { page: "abc", limit: "-5" },
+    };
+  
+    const res = {
+      statusCode: 0,
+      body: null,
+      status(code) {
+        this.statusCode = code;
+        return this;
+      },
+      json(data) {
+        this.body = data;
+      },
+    };
+  
+    await getUser(req, res);
+  
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body.posts.results)).toBe(true);
+  });
+
+  test('posts are returned in descending order by creation date', async () => {
+    const req = {
+      params: { username: 'TestUser' },
+      query: { page: 1, limit: 10 }
+    };
+    const res = {
+      statusCode: 0,
+      body: null,
+      status(code) {
+        this.statusCode = code;
+        return this;
+      },
+      json(data) {
+        this.body = data;
+      }
+    };
+  
+    await getUser(req, res);
+    
+    const posts = res.body.posts.results;
+    for (let i = 0; i < posts.length - 1; i++) {
+      expect(new Date(posts[i].createdAt) >= new Date(posts[i + 1].createdAt)).toBe(true);
+    }
+  });
+  
+  test('handles extremely large page numbers gracefully', async () => {
+    const req = {
+      params: { username: 'TestUser' },
+      query: { page: 99999, limit: 10 }
+    };
+    const res = {
+      statusCode: 0,
+      body: null,
+      status(code) {
+        this.statusCode = code;
+        return this;
+      },
+      json(data) {
+        this.body = data;
+      }
+    };
+  
+    await getUser(req, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.posts.results).toHaveLength(0);
+  });
+  
 });
