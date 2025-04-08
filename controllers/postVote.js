@@ -1,6 +1,6 @@
-const Post = require('../models/post');
-const User = require('../models/user');
-const pointsCalculator = require('../utils/pointsCalculator');
+const Post = require("../models/post");
+const User = require("../models/user");
+const pointsCalculator = require("../utils/pointsCalculator");
 
 const upvotePost = async (req, res) => {
   const { id } = req.params;
@@ -17,7 +17,7 @@ const upvotePost = async (req, res) => {
   if (!user) {
     return res
       .status(404)
-      .send({ message: 'User does not exist in database.' });
+      .send({ message: "User does not exist in database." });
   }
 
   const author = await User.findById(post.author);
@@ -25,7 +25,7 @@ const upvotePost = async (req, res) => {
   if (!author) {
     return res
       .status(404)
-      .send({ message: 'Author user does not exist in database.' });
+      .send({ message: "Author user does not exist in database." });
   }
 
   if (post.upvotedBy.includes(user._id.toString())) {
@@ -75,7 +75,7 @@ const downvotePost = async (req, res) => {
   if (!user) {
     return res
       .status(404)
-      .send({ message: 'User does not exist in database.' });
+      .send({ message: "User does not exist in database." });
   }
 
   const author = await User.findById(post.author);
@@ -83,7 +83,7 @@ const downvotePost = async (req, res) => {
   if (!author) {
     return res
       .status(404)
-      .send({ message: 'Author user does not exist in database.' });
+      .send({ message: "Author user does not exist in database." });
   }
 
   if (post.downvotedBy.includes(user._id.toString())) {

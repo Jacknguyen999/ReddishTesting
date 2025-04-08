@@ -1,3 +1,14 @@
 .env
 node_modules
 build
+
+
+.cursor/
+*.cursor
+
+.vscode
+
+*.markdown
+*.md
+
+*.mdc
