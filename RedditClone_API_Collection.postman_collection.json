@@ -1,0 +1,1018 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
+    "name": "Reddit Clone API",
+    "description": "API collection for Reddit Clone application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with username and password to get authentication token"
+          },
+          "response": [
+            {
+              "name": "Successful Login",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "login"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"username\": \"testuser\",\n  \"id\": \"60d21b4667d0d8992e610c85\",\n  \"avatar\": {\n    \"exists\": false,\n    \"imageLink\": \"null\",\n    \"imageId\": \"null\"\n  },\n  \"karma\": 0\n}"
+            }
+          ]
+        },
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signup"]
+            },
+            "description": "Create a new user account"
+          },
+          "response": [
+            {
+              "name": "Successful Signup",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"newuser\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/signup",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "signup"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"username\": \"newuser\",\n  \"id\": \"60d21b4667d0d8992e610c85\",\n  \"avatar\": {\n    \"exists\": false,\n    \"imageLink\": \"null\",\n    \"imageId\": \"null\"\n  },\n  \"karma\": 0\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Authentication endpoints for login and signup"
+    },
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "Get All Posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts?page=1&limit=10&sortby=new",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of posts per page"
+                },
+                {
+                  "key": "sortby",
+                  "value": "new",
+                  "description": "Sort by: new, top, best, hot, controversial, old"
+                }
+              ]
+            },
+            "description": "Get all posts with pagination and sorting"
+          },
+          "response": [
+            {
+              "name": "Successful Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/posts?page=1&limit=10&sortby=new",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "posts"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "sortby",
+                      "value": "new"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"previous\": null,\n  \"results\": [\n    {\n      \"id\": \"60d21b4667d0d8992e610c85\",\n      \"title\": \"First Post\",\n      \"postType\": \"Text\",\n      \"textSubmission\": \"This is the content of the first post\",\n      \"author\": {\n        \"username\": \"testuser\"\n      },\n      \"subreddit\": {\n        \"subredditName\": \"programming\"\n      },\n      \"pointsCount\": 10,\n      \"commentCount\": 2,\n      \"createdAt\": \"2023-06-15T10:00:00.000Z\",\n      \"updatedAt\": \"2023-06-15T10:00:00.000Z\"\n    },\n    {\n      \"id\": \"60d21b4667d0d8992e610c86\",\n      \"title\": \"Second Post\",\n      \"postType\": \"Link\",\n      \"linkSubmission\": \"https://example.com\",\n      \"author\": {\n        \"username\": \"anotheruser\"\n      },\n      \"subreddit\": {\n        \"subredditName\": \"news\"\n      },\n      \"pointsCount\": 5,\n      \"commentCount\": 0,\n      \"createdAt\": \"2023-06-14T10:00:00.000Z\",\n      \"updatedAt\": \"2023-06-14T10:00:00.000Z\"\n    }\n  ],\n  \"next\": {\n    \"page\": 2,\n    \"limit\": 10\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Post and Comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:id/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", ":id", "comments"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Post ID"
+                }
+              ]
+            },
+            "description": "Get a specific post with its comments"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Subscribed Posts",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/subscribed?page=1&limit=10&sortby=new",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "subscribed"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sortby",
+                  "value": "new"
+                }
+              ]
+            },
+            "description": "Get posts from subreddits the user is subscribed to"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/search?query=test&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "test",
+                  "description": "Search query"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Search for posts"
+          },
+          "response": []
+        },
+        {
+          "name": "Create New Post",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Post\",\n  \"subreddit\": \"60d21b4667d0d8992e610c85\",\n  \"postType\": \"Text\",\n  \"textSubmission\": \"This is a test post content\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"]
+            },
+            "description": "Create a new post (Text, Link, or Image)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Post",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"textSubmission\": \"Updated post content\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Post ID"
+                }
+              ]
+            },
+            "description": "Update an existing post (only the author can update)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Post ID"
+                }
+              ]
+            },
+            "description": "Delete a post (only the author can delete)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Add Comment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"commentBody\": \"This is a test comment\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:id/comment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", ":id", "comment"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Post ID"
+                }
+              ]
+            },
+            "description": "Add a comment to a post"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Comment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"commentBody\": \"Updated comment content\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:id/comment/:commentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", ":id", "comment", ":commentId"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Post ID"
+                },
+                {
+                  "key": "commentId",
+                  "value": "60d21b4667d0d8992e610c86",
+                  "description": "Comment ID"
+                }
+              ]
+            },
+            "description": "Update an existing comment (only the author can update)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:id/comment/:commentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", ":id", "comment", ":commentId"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Post ID"
+                },
+                {
+                  "key": "commentId",
+                  "value": "60d21b4667d0d8992e610c86",
+                  "description": "Comment ID"
+                }
+              ]
+            },
+            "description": "Delete a comment (only the author can delete)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for managing comments on posts"
+    },
+    {
+      "name": "Votes",
+      "item": [
+        {
+          "name": "Upvote Post",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:id/upvote",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", ":id", "upvote"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Post ID"
+                }
+              ]
+            },
+            "description": "Upvote a post"
+          },
+          "response": []
+        },
+        {
+          "name": "Downvote Post",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:id/downvote",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", ":id", "downvote"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Post ID"
+                }
+              ]
+            },
+            "description": "Downvote a post"
+          },
+          "response": []
+        },
+        {
+          "name": "Upvote Comment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:id/comment/:commentId/upvote",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "posts",
+                ":id",
+                "comment",
+                ":commentId",
+                "upvote"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Post ID"
+                },
+                {
+                  "key": "commentId",
+                  "value": "60d21b4667d0d8992e610c86",
+                  "description": "Comment ID"
+                }
+              ]
+            },
+            "description": "Upvote a comment"
+          },
+          "response": []
+        },
+        {
+          "name": "Downvote Comment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/:id/comment/:commentId/downvote",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "posts",
+                ":id",
+                "comment",
+                ":commentId",
+                "downvote"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Post ID"
+                },
+                {
+                  "key": "commentId",
+                  "value": "60d21b4667d0d8992e610c86",
+                  "description": "Comment ID"
+                }
+              ]
+            },
+            "description": "Downvote a comment"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for voting on posts and comments"
+    },
+    {
+      "name": "Subreddits",
+      "item": [
+        {
+          "name": "Get All Subreddits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/subreddits",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subreddits"]
+            },
+            "description": "Get a list of all subreddits"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Subreddit Posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/subreddits/r/:subredditName?page=1&limit=10&sortby=new",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subreddits", "r", ":subredditName"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sortby",
+                  "value": "new"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "subredditName",
+                  "value": "programming",
+                  "description": "Subreddit name"
+                }
+              ]
+            },
+            "description": "Get posts from a specific subreddit"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Top Subreddits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/subreddits/top10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subreddits", "top10"]
+            },
+            "description": "Get the top 10 subreddits by subscriber count"
+          },
+          "response": []
+        },
+        {
+          "name": "Create New Subreddit",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subredditName\": \"newsubreddit\",\n  \"description\": \"This is a new subreddit for testing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/subreddits",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subreddits"]
+            },
+            "description": "Create a new subreddit"
+          },
+          "response": []
+        },
+        {
+          "name": "Edit Subreddit Description",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated subreddit description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/subreddits/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subreddits", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Subreddit ID"
+                }
+              ]
+            },
+            "description": "Edit a subreddit's description (only admin can edit)"
+          },
+          "response": []
+        },
+        {
+          "name": "Subscribe to Subreddit",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/subreddits/:id/subscribe",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "subreddits", ":id", "subscribe"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "60d21b4667d0d8992e610c85",
+                  "description": "Subreddit ID"
+                }
+              ]
+            },
+            "description": "Subscribe to a subreddit (toggles subscription status)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for managing subreddits"
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:username?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":username"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "username",
+                  "value": "testuser",
+                  "description": "Username"
+                }
+              ]
+            },
+            "description": "Get a user's profile and posts"
+          },
+          "response": []
+        },
+        {
+          "name": "Set User Avatar",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"avatarImage\": \"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/avatar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "avatar"]
+            },
+            "description": "Set a user's avatar image"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove User Avatar",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-auth-token",
+                "value": "{{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/avatar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "avatar"]
+            },
+            "description": "Remove a user's avatar image"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for managing user profiles"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
