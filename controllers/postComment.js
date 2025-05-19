@@ -1,6 +1,6 @@
-const Post = require('../models/post');
-const User = require('../models/user');
-const numOfComments = require('../utils/numOfComments');
+const Post = require("../models/post");
+const User = require("../models/user");
+const numOfComments = require("../utils/numOfComments");
 
 const postComment = async (req, res) => {
   const { id } = req.params;
@@ -22,7 +22,7 @@ const postComment = async (req, res) => {
   if (!user) {
     return res
       .status(404)
-      .send({ message: 'User does not exist in database.' });
+      .send({ message: "User does not exist in database." });
   }
 
   post.comments = post.comments.concat({
@@ -34,7 +34,7 @@ const postComment = async (req, res) => {
   post.commentCount = numOfComments(post.comments);
   const savedPost = await post.save();
   const populatedPost = await savedPost
-    .populate('comments.commentedBy', 'username')
+    .populate("comments.commentedBy", "username")
     .execPopulate();
 
   user.karmaPoints.commentKarma++;
@@ -60,7 +60,7 @@ const deleteComment = async (req, res) => {
   if (!user) {
     return res
       .status(404)
-      .send({ message: 'User does not exist in database.' });
+      .send({ message: "User does not exist in database." });
   }
 
   const targetComment = post.comments.find(
@@ -74,7 +74,7 @@ const deleteComment = async (req, res) => {
   }
 
   if (targetComment.commentedBy.toString() !== user._id.toString()) {
-    return res.status(401).send({ message: 'Access is denied.' });
+    return res.status(401).send({ message: "Access is denied." });
   }
 
   post.comments = post.comments.filter((c) => c._id.toString() !== commentId);
@@ -104,7 +104,7 @@ const updateComment = async (req, res) => {
   if (!user) {
     return res
       .status(404)
-      .send({ message: 'User does not exist in database.' });
+      .send({ message: "User does not exist in database." });
   }
 
   const targetComment = post.comments.find(
@@ -118,7 +118,7 @@ const updateComment = async (req, res) => {
   }
 
   if (targetComment.commentedBy.toString() !== user._id.toString()) {
-    return res.status(401).send({ message: 'Access is denied.' });
+    return res.status(401).send({ message: "Access is denied." });
   }
 
   targetComment.commentBody = comment;
@@ -152,7 +152,7 @@ const postReply = async (req, res) => {
   if (!user) {
     return res
       .status(404)
-      .send({ message: 'User does not exist in database.' });
+      .send({ message: "User does not exist in database." });
   }
 
   const targetComment = post.comments.find(
@@ -178,7 +178,7 @@ const postReply = async (req, res) => {
   post.commentCount = numOfComments(post.comments);
   const savedPost = await post.save();
   const populatedPost = await savedPost
-    .populate('comments.replies.repliedBy', 'username')
+    .populate("comments.replies.repliedBy", "username")
     .execPopulate();
 
   user.karmaPoints.commentKarma++;
@@ -208,7 +208,7 @@ const deleteReply = async (req, res) => {
   if (!user) {
     return res
       .status(404)
-      .send({ message: 'User does not exist in database.' });
+      .send({ message: "User does not exist in database." });
   }
 
   const targetComment = post.comments.find(
@@ -232,7 +232,7 @@ const deleteReply = async (req, res) => {
   }
 
   if (targetReply.repliedBy.toString() !== user._id.toString()) {
-    return res.status(401).send({ message: 'Access is denied.' });
+    return res.status(401).send({ message: "Access is denied." });
   }
 
   targetComment.replies = targetComment.replies.filter(
@@ -267,7 +267,7 @@ const updateReply = async (req, res) => {
   if (!user) {
     return res
       .status(404)
-      .send({ message: 'User does not exist in database.' });
+      .send({ message: "User does not exist in database." });
   }
 
   const targetComment = post.comments.find(
@@ -291,7 +291,7 @@ const updateReply = async (req, res) => {
   }
 
   if (targetReply.repliedBy.toString() !== user._id.toString()) {
-    return res.status(401).send({ message: 'Access is denied.' });
+    return res.status(401).send({ message: "Access is denied." });
   }
 
   targetReply.replyBody = reply;

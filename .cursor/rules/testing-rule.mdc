@@ -3,25 +3,181 @@ description:
 globs: 
 alwaysApply: true
 ---
-You are an expert in TypeScript, React Native, Expo, and Mobile UI development.
+Unit Testing Guidelines for Node.js Projects
+As a QA tester, your role is to write unit tests for a Node.js project to validate its functionality without modifying the codebase. The tests must ensure the code behaves as expected, catch discrepancies (e.g., a function returns a 400 status code when a 404 is expected), and follow best practices. This document outlines the rules, flow, and guidelines for writing effective unit tests.
+Rules for Writing Unit Tests
 
-Code Style and Structure
+Do Not Modify the Codebase: Test the code as-is. If a bug exists (e.g., a 400 status code is returned instead of an expected 404), the test should fail and highlight the issue.
+Test Expected Behavior and Edge Cases:
+Validate the happy path (e.g., a 200 status code for a successful API response).
+Test edge cases (e.g., invalid inputs, missing parameters).
+Test error handling (e.g., a 404 status code for a missing resource).
 
-Naming Conventions
-TypeScript Usage
-Syntax and Formatting
-UI and Styling
-Safe Area Management
-Performance Optimization
-Navigation
-State Management
-Error Handling and Validation
-Testing
-Security
-Internationalization (i18n)
 
-Key Conventions
+Catch Discrepancies: Tests should fail if the actual behavior deviates from the expected (e.g., a 400 status code instead of a 404).
+Follow AAA Pattern: Structure tests using Arrange-Act-Assert:
+Arrange: Set up test data, mocks, and preconditions.
+Act: Call the function or endpoint.
+Assert: Verify the output matches the expected result.
 
-API Documentation
 
-Refer to Expo's documentation for detailed information on Views, Blueprints, and Extensions for best practices.
+Write Clear Test Descriptions: Use descriptive names (e.g., should return 404 when resource is not found).
+Ensure Test Independence: Tests must not depend on each other. Use beforeEach and afterEach hooks to reset state.
+Cover All Scenarios:
+Success cases.
+Failure cases (e.g., invalid input, server errors).
+Boundary conditions (e.g., empty arrays, null values).
+
+
+Validate Status Codes and Responses: For APIs, check both the HTTP status code and response body. A test expecting a 404 should fail if a 400 is returned.
+Run Tests in Isolation: Mock external services to ensure tests are independent.
+Report Failures Clearly: Failure messages should state expected vs. actual values (e.g., Expected status code 404, but got 400).
+
+Flow for Writing Unit Tests
+
+Understand the Codebase:
+
+Review the function or endpoint (e.g., a GET /users/:id route).
+Identify expected behavior from documentation or logic (e.g., returns a user with a 200 status code or a 404 if not found).
+Note inputs, outputs, and error conditions.
+
+
+Set Up the Testing Environment:
+
+Configure setup/teardown hooks to reset state.
+
+
+Identify Test Cases:
+
+Happy Path: Valid inputs (e.g., a valid user ID returns a user with a 200 status code).
+Error Cases: Invalid inputs (e.g., a non-existent user ID returns a 404).
+Edge Cases: Boundary conditions (e.g., empty strings, null values).
+Status Code Mismatches: Test for specific status codes (e.g., 404) and ensure failure if incorrect (e.g., 400).
+
+
+Write the Tests:
+
+Use the AAA pattern.
+
+Mock external dependencies.
+
+Assert return values, status codes, and side effects.
+
+Example test for an API endpoint:
+describe('GET /users/:id', () => {
+  it('should return 404 when user is not found', async () => {
+    // Arrange
+    const userId = 'non-existent-id';
+    sinon.stub(UserModel, 'findById').resolves(null);
+
+    // Act
+    const response = await request(app).get(`/users/${userId}`);
+
+    // Assert
+    expect(response.status).to.equal(404); // Fails if status is 400
+    expect(response.body).to.have.property('error', 'User not found');
+  });
+});
+
+
+
+
+Run the Tests:
+
+Execute the test suite (e.g., npm test or jest).
+Review failures, especially for status code mismatches (e.g., Expected status code 404, but got 400).
+Ensure clear, actionable output for developers.
+
+
+Refine and Iterate:
+
+Add test cases for new edge cases or bugs.
+Aim for 100% coverage of critical paths using Istanbul or Jest coverage.
+Update test descriptions if expectations change (without modifying the codebase).
+
+
+
+Example Test Suite
+Assume you’re testing a GET /users/:id endpoint that should:
+
+Return a user with a 200 status code if the user exists.
+Return a 404 with an error message if the user does not exist.
+However, the codebase has a bug returning a 400 instead of a 404 for non-existent users.
+
+Here’s a sample test suite using Mocha, Chai, and Sinon:
+const chai = require('chai');
+const sinon = require('sinon');
+const request = require('supertest');
+const { expect } = chai;
+const app = require('../app');
+const UserModel = require('../models/user');
+
+describe('GET /users/:id', () => {
+  beforeEach(() => {
+    sinon.restore();
+  });
+
+  it('should return user with 200 status code when user exists', async () => {
+    // Arrange
+    const userId = '123';
+    const mockUser = { id: '123', name: 'John Doe' };
+    sinon.stub(UserModel, 'findById').resolves(mockUser);
+
+    // Act
+    const response = await request(app).get(`/users/${userId}`);
+
+    // Assert
+    expect(response.status).to.equal(200);
+    expect(response.body).to.deep.equal(mockUser);
+  });
+
+  it('should return 404 status code when user is not found', async () => {
+    // Arrange
+    const userId = 'non-existent-id';
+    sinon.stub(UserModel, 'findById').resolves(null);
+
+    // Act
+    const response = await request(app).get(`/users/${userId}`);
+
+    // Assert
+    expect(response.status).to.equal(404); // Fails if status is 400
+    expect(response.body).to.have.property('error', 'User not found');
+  });
+
+  it('should return 400 status code for invalid user ID format', async () => {
+    // Arrange
+    const invalidUserId = 'invalid-id-format';
+
+    // Act
+    const response = await request(app).get(`/users/${invalidUserId}`);
+
+    // Assert
+    expect(response.status).to.equal(400);
+    expect(response.body).to.have.property('error', 'Invalid user ID');
+  });
+});
+
+Expected Outcome
+
+The test should return 404 status code when user is not found will fail if the codebase returns a 400 status code, with an error like:
+AssertionError: expected 400 to equal 404
+
+
+This failure highlights the bug for developers to fix.
+
+Other tests (e.g., happy path, invalid ID) should pass if the codebase behaves as expected.
+
+
+Additional Guidelines
+
+Use Code Coverage Tools: Run nyc or Jest with --coverage to ensure all code paths are tested.
+Handle Async Code: Use async/await or .then() for asynchronous functions.
+Test for Performance: Set timeouts for slow operations if applicable.
+Document Assumptions: Note if expected behavior (e.g., 404) is based on documentation or requirements.
+
+Tools and Libraries
+
+Testing Frameworks: Jest
+Code Coverage: Jest coverage.
+
+By adhering to these guidelines, you’ll create a robust unit test suite that validates the Node.js project, catches bugs like status code mismatches, and provides clear feedback for developers.

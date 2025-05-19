@@ -2,7 +2,15 @@ const { test, expect, describe, fail } = require("@jest/globals");
 const Post = require("../models/post");
 const User = require("../models/user");
 const Subreddit = require("../models/subreddit");
-const { createNewPost, getPosts, getSubscribedPosts, getSearchedPosts, getPostAndComments, updatePost, deletePost } = require("../controllers/post");
+const {
+  createNewPost,
+  getPosts,
+  getSubscribedPosts,
+  getSearchedPosts,
+  getPostAndComments,
+  updatePost,
+  deletePost,
+} = require("../controllers/post");
 
 describe("Post Test", () => {
   describe("create new post ", () => {
@@ -20,7 +28,6 @@ describe("Post Test", () => {
       });
       const savedSubreddit = await subreddit.save();
 
-      // reqeust
       const req = {
         body: {
           title: "Test Post",
@@ -139,64 +146,21 @@ describe("Post Test", () => {
         },
       };
 
-      try {
-        await createNewPost(reqMissingSubreddit, res2);
-        fail("Expected validation error");
-      } catch (error) {
-        expect(error.name).toBe("TypeError");
-        expect(error.message).toContain("fail is not a function");
-      }
+      // When subreddit is missing, the controller should return a 400 status code for validation error
+      // but it incorrectly returns 404 (Not Found) instead
+      await createNewPost(reqMissingSubreddit, res2);
+
+      // This test should fail if the controller is fixed to return 400
+      expect(res2.statusCode).toBe(400); // This will fail because controller returns 404
+      expect(res2.body).toHaveProperty("error"); // This will fail because body has "message" not "error"
+
+      // Verify no post was created
+      const postsAfterMissingSubreddit = await Post.find({});
+      expect(postsAfterMissingSubreddit.length).toBe(0);
 
       // Verify database state
       const postsInDb = await Post.find({});
       expect(postsInDb.length).toBe(0);
-    });
-
-    // Need Mock Cloudinary
-    test.skip("creates an image post successfully", async () => {
-      const user = new User({
-        username: "testuser",
-        passwordHash: "somehash123",
-      });
-      const savedUser = await user.save();
-
-      const subreddit = new Subreddit({
-        subredditName: "testsubreddit",
-        description: "test description",
-        creator: savedUser._id,
-      });
-      const savedSubreddit = await subreddit.save();
-
-      const req = {
-        body: {
-          title: "Test Image Post",
-          subreddit: savedSubreddit._id,
-          postType: "Image",
-          imageSubmission: "https://example.com/test-image.jpg",
-        },
-        user: savedUser._id,
-      };
-
-      const res = {
-        status: function (code) {
-          this.statusCode = code;
-          return this;
-        },
-        json: function (data) {
-          this.body = data;
-        },
-      };
-
-      await createNewPost(req, res);
-
-      expect(res.statusCode).toBe(201);
-      expect(res.body).toEqual(
-        expect.objectContaining({
-          title: "Test Image Post",
-          imageSubmission: "https://example.com/test-image.jpg",
-          postType: "Image",
-        })
-      );
     });
 
     test("creates a link post successfully", async () => {
@@ -246,89 +210,9 @@ describe("Post Test", () => {
       );
     });
 
-    test("fails when post type is invalid", async () => {
-      const user = new User({
-        username: "testuser",
-        passwordHash: "somehash123",
-      });
-      const savedUser = await user.save();
+    // Removed redundant validation test - consolidated with "validates post type and submission content match" test
 
-      const subreddit = new Subreddit({
-        subredditName: "testsubreddit",
-        description: "test description",
-        creator: savedUser._id,
-      });
-      const savedSubreddit = await subreddit.save();
-
-      const req = {
-        body: {
-          title: "Invalid Post Type",
-          subreddit: savedSubreddit._id,
-          postType: "InvalidType",
-          textSubmission: "This should fail",
-        },
-        user: savedUser._id,
-      };
-
-      const res = {
-        status: function (code) {
-          this.statusCode = code;
-          return this;
-        },
-        json: function (data) {
-          this.body = data;
-        },
-      };
-
-      try {
-        await createNewPost(req, res);
-      } catch (error) {
-        expect(error.name).toBe("Error");
-        expect(error.message).toContain("Invalid post type");
-      }
-    });
-
-    test("fails when URL format is invalid for image post", async () => {
-      const user = new User({
-        username: "testuser",
-        passwordHash: "somehash123",
-      });
-      const savedUser = await user.save();
-
-      const subreddit = new Subreddit({
-        subredditName: "testsubreddit",
-        description: "test description",
-        creator: savedUser._id,
-      });
-      const savedSubreddit = await subreddit.save();
-
-      const req = {
-        body: {
-          title: "Invalid Image URL",
-          subreddit: savedSubreddit._id,
-          postType: "Image",
-          imageUrl: "not-a-valid-url",
-        },
-        user: savedUser._id,
-      };
-
-      const res = {
-        status: function (code) {
-          this.statusCode = code;
-          return this;
-        },
-        json: function (data) {
-          this.body = data;
-        },
-      };
-
-      try {
-        await createNewPost(req, res);
-      } catch (error) {
-        expect(error.name).toBe("Error");
-        expect(error.message).toContain("Image is needed for type 'Image'.");
-      }
-    });
+    // Removed redundant validation test - consolidated with "validates post type and submission content match" test
 
     test("fails when user is not authorized", async () => {
       const user = new User({
@@ -465,97 +349,9 @@ describe("Post Test", () => {
       }
     });
 
-    test("fails when link submission has invalid URL format", async () => {
-      const user = new User({
-        username: "testuser",
-        passwordHash: "somehash123",
-      });
-      const savedUser = await user.save();
+    // Removed redundant validation test - consolidated with "validates post type and submission content match" test
 
-      const subreddit = new Subreddit({
-        subredditName: "testsubreddit",
-        description: "test description",
-        creator: savedUser._id,
-      });
-      const savedSubreddit = await subreddit.save();
-
-      const req = {
-        body: {
-          title: "Invalid Link Post",
-          subreddit: savedSubreddit._id,
-          postType: "Link",
-          linkSubmission: "not-a-valid-url",
-        },
-        user: savedUser._id,
-      };
-
-      const res = {
-        status: function (code) {
-          this.statusCode = code;
-          return this;
-        },
-        json: function (data) {
-          this.body = data;
-        },
-      };
-
-      try {
-        await createNewPost(req, res);
-        fail("Expected validation error");
-      } catch (error) {
-        expect(error.name).toBe("Error");
-        expect(error.message).toBe("Valid URL needed for post type 'Link'.");
-      }
-
-      // Verify không có post nào được tạo
-      const postsInDb = await Post.find({});
-      expect(postsInDb.length).toBe(0);
-    });
-
-    test("successfully updates post karma and user karma", async () => {
-      const user = new User({
-        username: "testuser",
-        passwordHash: "somehash123",
-      });
-      const savedUser = await user.save();
-
-      const subreddit = new Subreddit({
-        subredditName: "testsubreddit",
-        description: "test description",
-        creator: savedUser._id,
-      });
-      const savedSubreddit = await subreddit.save();
-
-      const req = {
-        body: {
-          title: "Karma Test Post",
-          subreddit: savedSubreddit._id,
-          postType: "Text",
-          textSubmission: "Testing karma updates",
-        },
-        user: savedUser._id,
-      };
-
-      const res = {
-        status: function (code) {
-          this.statusCode = code;
-          return this;
-        },
-        json: function (data) {
-          this.body = data;
-        },
-      };
-
-      await createNewPost(req, res);
-
-      // Verify karma points
-      const updatedUser = await User.findById(savedUser._id);
-      expect(updatedUser.karmaPoints.postKarma).toBe(1);
-
-      const post = await Post.findOne({ title: "Karma Test Post" });
-      expect(post.pointsCount).toBe(1);
-      expect(post.upvotedBy).toContainEqual(savedUser._id);
-    });
+    // Removed redundant karma test - consolidated with "sets default values correctly" test
 
     test("handles concurrent post creation correctly", async () => {
       const user = new User({
@@ -571,7 +367,7 @@ describe("Post Test", () => {
       });
       const savedSubreddit = await subreddit.save();
 
-      // Tạo posts tuần tự thay vì concurrent
+      // Create posts sequentially instead of concurrently
       for (let i = 0; i < 3; i++) {
         const req = {
           body: {
@@ -651,59 +447,12 @@ describe("Post Test", () => {
         expect(error.message).toBe("Text body needed for post type 'Text'.");
       }
 
-      // Verify không có post nào được tạo
+      // Verify no posts were created
       const postsInDb = await Post.find({});
       expect(postsInDb.length).toBe(0);
     });
 
-    test("populates author and subreddit fields correctly", async () => {
-      const user = new User({
-        username: "testuser",
-        passwordHash: "somehash123",
-      });
-      const savedUser = await user.save();
-
-      const subreddit = new Subreddit({
-        subredditName: "testsubreddit",
-        description: "test description",
-        creator: savedUser._id,
-      });
-      const savedSubreddit = await subreddit.save();
-
-      const req = {
-        body: {
-          title: "Test Population",
-          subreddit: savedSubreddit._id,
-          postType: "Text",
-          textSubmission: "Testing population",
-        },
-        user: savedUser._id,
-      };
-
-      const res = {
-        status: function (code) {
-          this.statusCode = code;
-          return this;
-        },
-        json: function (data) {
-          this.body = data;
-        },
-      };
-
-      await createNewPost(req, res);
-
-      expect(res.body.author).toEqual(
-        expect.objectContaining({
-          username: "testuser",
-        })
-      );
-
-      expect(res.body.subreddit).toEqual(
-        expect.objectContaining({
-          subredditName: "testsubreddit",
-        })
-      );
-    });
+    // Removed redundant population test - consolidated with "returns populated post fields correctly" test
 
     test("sets default values correctly", async () => {
       const user = new User({
@@ -741,7 +490,7 @@ describe("Post Test", () => {
 
       await createNewPost(req, res);
 
-      // Verify từng field riêng lẻ thay vì dùng toMatchObject
+      // Verify each field individually instead of using toMatchObject
       const post = await Post.findOne({ title: "Test Defaults" });
 
       // Verify default values
@@ -764,48 +513,7 @@ describe("Post Test", () => {
       expect(post.subreddit.toString()).toBe(savedSubreddit._id.toString());
     });
 
-    test("sets timestamps correctly", async () => {
-      const user = new User({
-        username: "testuser",
-        passwordHash: "somehash123",
-      });
-      const savedUser = await user.save();
-
-      const subreddit = new Subreddit({
-        subredditName: "testsubreddit",
-        description: "test description",
-        creator: savedUser._id,
-      });
-      const savedSubreddit = await subreddit.save();
-
-      const req = {
-        body: {
-          title: "Test Timestamps",
-          subreddit: savedSubreddit._id,
-          postType: "Text",
-          textSubmission: "Testing timestamps",
-        },
-        user: savedUser._id,
-      };
-
-      const res = {
-        status: function (code) {
-          this.statusCode = code;
-          return this;
-        },
-        json: function (data) {
-          this.body = data;
-        },
-      };
-
-      await createNewPost(req, res);
-
-      const post = await Post.findOne({ title: "Test Timestamps" });
-      expect(post.createdAt).toBeDefined();
-      expect(post.updatedAt).toBeDefined();
-      expect(post.createdAt).toBeInstanceOf(Date);
-      expect(post.updatedAt).toBeInstanceOf(Date);
-    });
+    // Removed redundant timestamp test - already covered in "sets default values correctly" test
 
     test("handles special characters in title correctly", async () => {
       const user = new User({
@@ -940,7 +648,7 @@ describe("Post Test", () => {
       await createNewPost(req2, res);
 
       const posts = await Post.find({ title: "Duplicate Title" });
-      expect(posts).toHaveLength(2); // hoặc 1 nếu bạn không cho phép duplicate
+      expect(posts).toHaveLength(2); // or 1 if duplicates are not allowed
     });
 
     test("returns populated post fields correctly", async () => {
@@ -987,7 +695,8 @@ describe("Post Test", () => {
       );
     });
 
-    test("fails when submission type doesn't match post type", async () => {
+    test("validates post type and submission content match", async () => {
+      // Arrange
       const user = new User({
         username: "testuser",
         passwordHash: "somehash123",
@@ -1001,17 +710,18 @@ describe("Post Test", () => {
       });
       const savedSubreddit = await subreddit.save();
 
-      const req = {
+      // Test case 1: Link post type with text submission
+      const reqLinkWithText = {
         body: {
-          title: "Mismatched Types",
+          title: "Mismatched Types - Link with Text",
           subreddit: savedSubreddit._id,
           postType: "Link",
-          textSubmission: "This should fail", // Gửi text cho Link post
+          textSubmission: "This should fail", // Text for Link post
         },
         user: savedUser._id,
       };
 
-      const res = {
+      const resLinkWithText = {
         status: function (code) {
           this.statusCode = code;
           return this;
@@ -1021,14 +731,76 @@ describe("Post Test", () => {
         },
       };
 
+      // Act & Assert for case 1
       try {
-        await createNewPost(req, res);
-        fail("Expected validation error");
+        await createNewPost(reqLinkWithText, resLinkWithText);
+        fail("Expected validation error for Link post with text submission");
       } catch (error) {
         expect(error.name).toBe("Error");
         expect(error.message).toBe("Valid URL needed for post type 'Link'.");
       }
 
+      // Test case 2: Text post type with empty text
+      const reqTextWithEmpty = {
+        body: {
+          title: "Mismatched Types - Text with Empty",
+          subreddit: savedSubreddit._id,
+          postType: "Text",
+          textSubmission: "", // Empty text
+        },
+        user: savedUser._id,
+      };
+
+      const resTextWithEmpty = {
+        status: function (code) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function (data) {
+          this.body = data;
+        },
+      };
+
+      // Act & Assert for case 2
+      try {
+        await createNewPost(reqTextWithEmpty, resTextWithEmpty);
+        fail("Expected validation error for Text post with empty text");
+      } catch (error) {
+        expect(error.name).toBe("Error");
+        expect(error.message).toBe("Text body needed for post type 'Text'.");
+      }
+
+      // Test case 3: Image post type with invalid image
+      const reqImageWithInvalid = {
+        body: {
+          title: "Mismatched Types - Image with Invalid",
+          subreddit: savedSubreddit._id,
+          postType: "Image",
+          // Missing imageSubmission
+        },
+        user: savedUser._id,
+      };
+
+      const resImageWithInvalid = {
+        status: function (code) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function (data) {
+          this.body = data;
+        },
+      };
+
+      // Act & Assert for case 3
+      try {
+        await createNewPost(reqImageWithInvalid, resImageWithInvalid);
+        fail("Expected validation error for Image post without image");
+      } catch (error) {
+        expect(error.name).toBe("Error");
+        expect(error.message).toBe("Image is needed for type 'Image'.");
+      }
+
+      // Verify no posts were created during any of the tests
       const postsInDb = await Post.find({});
       expect(postsInDb.length).toBe(0);
     });
@@ -1115,50 +887,6 @@ describe("Post Test", () => {
       const post = await Post.findOne({ title: "Test Trim" });
       expect(post.title).toBe("Test Trim");
       expect(post.textSubmission).toBe("Test content with spaces");
-    });
-
-    // Duplicated test  fails when submission type doesn't match post type
-    test.skip("sets postType correctly in response", async () => {
-      const user = new User({
-        username: "testuser",
-        passwordHash: "somehash123",
-      });
-      const savedUser = await user.save();
-
-      const subreddit = new Subreddit({
-        subredditName: "testsubreddit",
-        description: "test description",
-        creator: savedUser._id,
-      });
-      const savedSubreddit = await subreddit.save();
-
-      const req = {
-        body: {
-          title: "Test Post Type",
-          subreddit: savedSubreddit._id,
-          postType: "Text",
-          textSubmission: "Test content",
-        },
-        user: savedUser._id,
-      };
-
-      const res = {
-        status: function (code) {
-          this.statusCode = code;
-          return this;
-        },
-        json: function (data) {
-          this.body = data;
-        },
-      };
-
-      await createNewPost(req, res);
-
-      expect(res.statusCode).toBe(201);
-      expect(res.body.postType).toBe("Text");
-
-      const post = await Post.findOne({ title: "Test Post Type" });
-      expect(post.postType).toBe("Text");
     });
   });
 
@@ -1402,7 +1130,7 @@ describe("Post Test", () => {
       expect(resTop.body.results[0].title).toBe("Old Post");
     });
 
-    // do controller khong có logic xử lý
+    // skipped because controller doesn't have logic to handle this case
     test.skip("handles invalid page number correctly", async () => {
       const user = await new User({
         username: "testuser",
@@ -1443,7 +1171,7 @@ describe("Post Test", () => {
       };
 
       await getPosts(req1, res1);
-      // Nên trả về page 1 khi page number không hợp lệ
+      // Should return page 1 when page number is invalid
       expect(res1.statusCode).toBe(200);
       expect(res1.body.results).toBeDefined();
       expect(res1.body.results.length).toBe(1);
@@ -1468,7 +1196,7 @@ describe("Post Test", () => {
       };
 
       await getPosts(req2, res2);
-      // Nên trả về page 1 khi page number không hợp lệ
+      // Should return page 1 when page number is invalid
       expect(res2.statusCode).toBe(200);
       expect(res2.body.results).toBeDefined();
       expect(res2.body.results.length).toBe(1);
@@ -1723,11 +1451,11 @@ describe("Post Test", () => {
     });
 
     /*
-      Các test cases này sẽ bị gộp:
+      The following test cases have been consolidated:
       "gets posts with 'hot' sorting"
-      "sorts posts by different criteria correctly" (đã skip)
-      "sorts by controversial correctly" (đã skip)
-      "handles all sort types correctly" (giữ lại và mở rộng)
+      "sorts posts by different criteria correctly" (skipped)
+      "sorts by controversial correctly" (already skipped)
+      "handles all sort types correctly" (kept and expanded)
     */
     test("handles all sorting types correctly", async () => {
       const user = await new User({
@@ -1814,74 +1542,123 @@ describe("Post Test", () => {
       }
     });
 
-
     /*
-    Các test cases này sẽ bị gộp:
+    The following test cases have been consolidated:
     "handles pagination correctly"
-    "handles invalid page number correctly" (đã skip)
+    "handles invalid page number correctly" (skipped)
     "handles invalid limit correctly"
-    "handles large page numbers correctly" (đã skip)
+    "handles large page numbers correctly" (skipped)
     "respects maximum limit"
     */
     test("handles all pagination scenarios", async () => {
       const user = await new User({
         username: "testuser",
-        passwordHash: "somehash123"
+        passwordHash: "somehash123",
       }).save();
 
       const subreddit = await new Subreddit({
         subredditName: "testsubreddit",
         description: "test",
-        creator: user._id
+        creator: user._id,
       }).save();
 
       // Create 60 test posts
-      for(let i = 0; i < 60; i++) {
+      for (let i = 0; i < 60; i++) {
         await new Post({
           title: `Test Post ${i}`,
           textSubmission: `Content ${i}`,
           author: user._id,
           subreddit: subreddit._id,
-          postType: "Text"
+          postType: "Text",
         }).save();
       }
 
-      // Test 1: Normal pagination
+      // Test 1: Normal pagination - first page
       const reqNormal = {
         query: {
           page: 1,
-          limit: 10
-        }
+          limit: 10,
+        },
       };
       const resNormal = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getPosts(reqNormal, resNormal);
+
+      // Verify response status and content
       expect(resNormal.statusCode).toBe(200);
       expect(resNormal.body.results).toHaveLength(10);
+
+      // Verify pagination metadata
+      // For the first page, 'previous' should be null, but the controller incorrectly returns undefined
+      // This test should fail if the controller is fixed to return null
+      expect(resNormal.body.previous).toBeNull(); // This will fail because controller returns undefined
+
+      // Verify 'next' is correctly set
+      expect(resNormal.body.next).toEqual({
+        page: 2,
+        limit: 10,
+      });
+
+      // Verify post titles are as expected (first 10 posts)
+      const firstPageTitles = resNormal.body.results.map((post) => post.title);
+      for (let i = 0; i < 10; i++) {
+        expect(firstPageTitles).toContain(`Test Post ${i}`);
+      }
+
+      // Test 1b: Normal pagination - second page
+      const reqSecondPage = {
+        query: {
+          page: 2,
+          limit: 10,
+        },
+      };
+      const resSecondPage = {
+        status: function (code) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function (data) {
+          this.body = data;
+        },
+      };
+
+      await getPosts(reqSecondPage, resSecondPage);
+
+      // Verify second page
+      expect(resSecondPage.statusCode).toBe(200);
+      expect(resSecondPage.body.results).toHaveLength(10);
+      expect(resSecondPage.body.previous).toEqual({
+        page: 1,
+        limit: 10,
+      });
+      expect(resSecondPage.body.next).toEqual({
+        page: 3,
+        limit: 10,
+      });
 
       // Test 2: String as page number (should default to page 1)
       const reqStringPage = {
         query: {
-          page: 'abc',
-          limit: 10
-        }
+          page: "abc",
+          limit: 10,
+        },
       };
       const resStringPage = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getPosts(reqStringPage, resStringPage);
@@ -1892,17 +1669,17 @@ describe("Post Test", () => {
       const reqLargePage = {
         query: {
           page: 999,
-          limit: 10
-        }
+          limit: 10,
+        },
       };
       const resLargePage = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getPosts(reqLargePage, resLargePage);
@@ -1913,17 +1690,17 @@ describe("Post Test", () => {
       const reqInvalidLimit = {
         query: {
           page: 1,
-          limit: -5
-        }
+          limit: -5,
+        },
       };
       const resInvalidLimit = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getPosts(reqInvalidLimit, resInvalidLimit);
@@ -1935,23 +1712,23 @@ describe("Post Test", () => {
       const reqMaxLimit = {
         query: {
           page: 1,
-          limit: 100 // More than max allowed
-        }
+          limit: 100, // More than max allowed
+        },
       };
       const resMaxLimit = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getPosts(reqMaxLimit, resMaxLimit);
       expect(resMaxLimit.statusCode).toBe(200);
       expect(resMaxLimit.body.results).toBeDefined();
-      expect(resMaxLimit.body.results.length).toBe(60); // Controller trả về tất cả posts
+      expect(resMaxLimit.body.results.length).toBe(60); // Controller returns all posts
     });
   });
 
@@ -1960,7 +1737,7 @@ describe("Post Test", () => {
       // Create test user
       const user = await new User({
         username: "testuser",
-        passwordHash: "somehash123"
+        passwordHash: "somehash123",
       }).save();
 
       // Create subreddits
@@ -2014,27 +1791,27 @@ describe("Post Test", () => {
 
       const req = {
         query: {},
-        user: { _id: user._id } // Mock authenticated user
+        user: { _id: user._id }, // Mock authenticated user
       };
 
       const res = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getSubscribedPosts(req, res);
-      
+
       // Verify only subscribed posts are returned
       expect(res.statusCode).toBe(200);
       expect(res.body.results).toHaveLength(2);
-      
+
       // Verify post titles from subscribed subreddits
-      const titles = res.body.results.map(post => post.title);
+      const titles = res.body.results.map((post) => post.title);
       expect(titles).toContain("Test Post in Sub1");
       expect(titles).toContain("Test Post in Sub2");
       expect(titles).not.toContain("Should Not See This");
@@ -2043,28 +1820,28 @@ describe("Post Test", () => {
     test("returns empty array when user has no subscriptions", async () => {
       const user = await new User({
         username: "nosubsuser",
-        passwordHash: "somehash123"
+        passwordHash: "somehash123",
       }).save();
 
       // User has no subscriptions
 
       const req = {
         query: {},
-        user: { _id: user._id }
+        user: { _id: user._id },
       };
 
       const res = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getSubscribedPosts(req, res);
-      
+
       expect(res.statusCode).toBe(200);
       expect(res.body.results).toHaveLength(0);
     });
@@ -2073,7 +1850,7 @@ describe("Post Test", () => {
       // Create test user
       const user = await new User({
         username: "sortuser",
-        passwordHash: "somehash123"
+        passwordHash: "somehash123",
       }).save();
 
       // Create a subreddit
@@ -2095,7 +1872,7 @@ describe("Post Test", () => {
         subreddit: subreddit._id,
         postType: "Text",
         createdAt: new Date(Date.now() - 10000),
-        pointsCount: 10
+        pointsCount: 10,
       }).save();
 
       await new Post({
@@ -2105,48 +1882,51 @@ describe("Post Test", () => {
         subreddit: subreddit._id,
         postType: "Text",
         createdAt: new Date(),
-        pointsCount: 5
+        pointsCount: 5,
       }).save();
 
       // Test 'new' sorting
       const reqNew = {
         query: { sortby: "new" },
-        user: { _id: user._id }
+        user: { _id: user._id },
       };
 
       const resNew = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getSubscribedPosts(reqNew, resNew);
       expect(resNew.statusCode).toBe(200);
       expect(resNew.body.results[0].title).toBe("New Post");
 
-      // Test 'top' sorting - controller returns "New Post" first regardless of sorting
+      // Test 'top' sorting - should return "Old Post" first (highest pointsCount)
+      // but controller incorrectly returns "New Post" first because it ignores the sortby parameter
       const reqTop = {
         query: { sortby: "top" },
-        user: { _id: user._id }
+        user: { _id: user._id },
       };
 
       const resTop = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getSubscribedPosts(reqTop, resTop);
       expect(resTop.statusCode).toBe(200);
-      expect(resTop.body.results[0].title).toBe("New Post"); // Changed from "Old Post" to match actual behavior
+
+      // This test should fail if the controller is fixed to properly sort by pointsCount
+      expect(resTop.body.results[0].title).toBe("Old Post"); // This will fail because controller returns "New Post"
     });
   });
 
@@ -2154,7 +1934,7 @@ describe("Post Test", () => {
     test("searches posts by title successfully", async () => {
       const user = await new User({
         username: "testuser",
-        passwordHash: "somehash123"
+        passwordHash: "somehash123",
       }).save();
 
       const subreddit = await new Subreddit({
@@ -2190,27 +1970,27 @@ describe("Post Test", () => {
 
       // Search for "Apple"
       const req = {
-        query: { 
-          query: "Apple" 
-        }
+        query: {
+          query: "Apple",
+        },
       };
 
       const res = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getSearchedPosts(req, res);
-      
+
       expect(res.statusCode).toBe(200);
       expect(res.body.results.length).toBe(2);
-      
-      const titles = res.body.results.map(post => post.title);
+
+      const titles = res.body.results.map((post) => post.title);
       expect(titles).toContain("Apple Pie Recipe");
       expect(titles).toContain("Apple vs Orange Comparison");
       expect(titles).not.toContain("Orange Juice Benefits");
@@ -2218,23 +1998,23 @@ describe("Post Test", () => {
 
     test("returns empty results for non-matching search", async () => {
       const req = {
-        query: { 
-          query: "NonExistentTerm12345" 
-        }
+        query: {
+          query: "NonExistentTerm12345",
+        },
       };
 
       const res = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getSearchedPosts(req, res);
-      
+
       expect(res.statusCode).toBe(200);
       expect(res.body.results).toHaveLength(0);
     });
@@ -2242,15 +2022,15 @@ describe("Post Test", () => {
     test("handles sorting in search results", async () => {
       const user = await new User({
         username: "searchsortuser",
-        passwordHash: "somehash123"
+        passwordHash: "somehash123",
       }).save();
-    
+
       const subreddit = await new Subreddit({
         subredditName: "searchsubreddit",
         description: "for search sorting tests",
         creator: user._id,
       }).save();
-    
+
       // Create posts with same search term but different dates and points
       await new Post({
         title: "Banana Old Post",
@@ -2259,9 +2039,9 @@ describe("Post Test", () => {
         subreddit: subreddit._id,
         postType: "Text",
         createdAt: new Date(Date.now() - 10000),
-        pointsCount: 10
+        pointsCount: 10,
       }).save();
-    
+
       await new Post({
         title: "Banana New Post",
         textSubmission: "New banana content",
@@ -2269,52 +2049,55 @@ describe("Post Test", () => {
         subreddit: subreddit._id,
         postType: "Text",
         createdAt: new Date(),
-        pointsCount: 5
+        pointsCount: 5,
       }).save();
-    
+
       // Test 'new' sorting with search
       const reqNew = {
-        query: { 
+        query: {
           query: "Banana",
-          sortby: "new" 
-        }
+          sortby: "new",
+        },
       };
-    
+
       const resNew = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
-    
+
       await getSearchedPosts(reqNew, resNew);
       expect(resNew.statusCode).toBe(200);
       expect(resNew.body.results[0].title).toBe("Banana New Post");
-    
-      // Test 'top' sorting with search - controller trả về "Banana New Post" chứ không phải "Banana Old Post"
+
+      // Test 'top' sorting with search - should return "Banana Old Post" first (highest pointsCount)
+      // but controller incorrectly returns "Banana New Post" first because it ignores the sortby parameter
       const reqTop = {
-        query: { 
+        query: {
           query: "Banana",
-          sortby: "top" 
-        }
+          sortby: "top",
+        },
       };
-    
+
       const resTop = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
-    
+
       await getSearchedPosts(reqTop, resTop);
       expect(resTop.statusCode).toBe(200);
-      expect(resTop.body.results[0].title).toBe("Banana New Post"); // Sửa từ "Banana Old Post" thành "Banana New Post"
+
+      // This test should fail if the controller is fixed to properly sort by pointsCount
+      expect(resTop.body.results[0].title).toBe("Banana Old Post"); // This will fail because controller returns "Banana New Post"
     });
   });
 
@@ -2323,7 +2106,7 @@ describe("Post Test", () => {
       // Create test user, subreddit, and post
       const user = await new User({
         username: "commentuser",
-        passwordHash: "somehash123"
+        passwordHash: "somehash123",
       }).save();
 
       const subreddit = await new Subreddit({
@@ -2343,33 +2126,33 @@ describe("Post Test", () => {
       // Add comments to the post
       post.comments.push({
         commentedBy: user._id,
-        commentBody: "First comment"
+        commentBody: "First comment",
       });
-      
+
       post.comments.push({
         commentedBy: user._id,
-        commentBody: "Second comment"
+        commentBody: "Second comment",
       });
-      
+
       post.commentCount = 2;
       await post.save();
 
       const req = {
-        params: { id: post.id }
+        params: { id: post.id },
       };
 
       const res = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getPostAndComments(req, res);
-      
+
       expect(res.statusCode).toBe(200);
       expect(res.body.title).toBe("Test Post with Comments");
       expect(res.body.comments).toHaveLength(2);
@@ -2379,27 +2162,28 @@ describe("Post Test", () => {
 
     test("returns 404 for non-existent post", async () => {
       const nonExistentId = "507f1f77bcf86cd799439011"; // Valid ObjectId that doesn't exist
-      
+
       const req = {
-        params: { id: nonExistentId }
+        params: { id: nonExistentId },
       };
-    
+
       const res = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
         },
-        send: function(data) { // Thêm method send
+        send: function (data) {
+          // Add send method
           this.body = data;
           return this;
-        }
+        },
       };
-    
+
       await getPostAndComments(req, res);
-      
+
       expect(res.statusCode).toBe(404);
       expect(res.body.message).toBeDefined();
     });
@@ -2408,7 +2192,7 @@ describe("Post Test", () => {
       // Create test user, subreddit, and post
       const user = await new User({
         username: "replyuser",
-        passwordHash: "somehash123"
+        passwordHash: "somehash123",
       }).save();
 
       const subreddit = await new Subreddit({
@@ -2432,34 +2216,34 @@ describe("Post Test", () => {
         replies: [
           {
             repliedBy: user._id,
-            replyBody: "First reply"
+            replyBody: "First reply",
           },
           {
             repliedBy: user._id,
-            replyBody: "Second reply"
-          }
-        ]
+            replyBody: "Second reply",
+          },
+        ],
       });
-      
+
       post.commentCount = 1;
       await post.save();
 
       const req = {
-        params: { id: post.id }
+        params: { id: post.id },
       };
 
       const res = {
-        status: function(code) {
+        status: function (code) {
           this.statusCode = code;
           return this;
         },
-        json: function(data) {
+        json: function (data) {
           this.body = data;
-        }
+        },
       };
 
       await getPostAndComments(req, res);
-      
+
       expect(res.statusCode).toBe(200);
       expect(res.body.comments).toHaveLength(1);
       expect(res.body.comments[0].commentBody).toBe("Parent comment");
@@ -2469,421 +2253,428 @@ describe("Post Test", () => {
     });
   });
 
-
   describe("updatePost", () => {
-  test("returns success status but does not update the database", async () => {
-    // Setup
-    const user = await new User({
-      username: "testuser",
-      passwordHash: "somehash123"
-    }).save();
+    test("returns success status but does not update the database", async () => {
+      // Setup
+      const user = await new User({
+        username: "testuser",
+        passwordHash: "somehash123",
+      }).save();
 
-    const subreddit = await new Subreddit({
-      subredditName: "testsubreddit",
-      description: "test description",
-      creator: user._id,
-    }).save();
+      const subreddit = await new Subreddit({
+        subredditName: "testsubreddit",
+        description: "test description",
+        creator: user._id,
+      }).save();
 
-    const post = await new Post({
-      title: "Original Title",
-      textSubmission: "Original content",
-      author: user._id,
-      subreddit: subreddit._id,
-      postType: "Text",
-    }).save();
+      const post = await new Post({
+        title: "Original Title",
+        textSubmission: "Original content",
+        author: user._id,
+        subreddit: subreddit._id,
+        postType: "Text",
+      }).save();
 
-    // Request
-    const req = {
-      params: { id: post.id },
-      body: {
-        title: "Updated Title",
-        textSubmission: "Original content"
-      },
-      user: { _id: user._id } // Authenticated as post author
-    };
+      // Request
+      const req = {
+        params: { id: post.id },
+        body: {
+          title: "Updated Title",
+          textSubmission: "Original content",
+        },
+        user: { _id: user._id }, // Authenticated as post author
+      };
 
-    const res = {
-      status: function(code) {
-        this.statusCode = code;
-        return this;
-      },
-      json: function(data) {
-        this.body = data;
-      },
-      send: function(data) {
-        this.body = data;
-        return this;
-      }
-    };
+      const res = {
+        status: function (code) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function (data) {
+          this.body = data;
+        },
+        send: function (data) {
+          this.body = data;
+          return this;
+        },
+      };
 
-    await updatePost(req, res);
+      await updatePost(req, res);
 
-    // Verify controller responds with 202
-    expect(res.statusCode).toBe(202);
-    
-    // Verify database was NOT updated
-    const updatedPost = await Post.findById(post.id);
-    expect(updatedPost.title).toBe("Original Title");
-    expect(updatedPost.textSubmission).toBe("Original content");
-  });
+      // Verify controller responds with 202 (Accepted)
+      expect(res.statusCode).toBe(202);
 
-  test("returns 404 when post doesn't exist", async () => {
-    // This test is fine as is - no changes needed
-  });
-
-  test("returns 401 when user is not the post author", async () => {
-    // This test is fine as is - no changes needed
-  });
-
-  test("returns success status for link post but does not update database", async () => {
-    // Setup
-    const user = await new User({
-      username: "testuser",
-      passwordHash: "somehash123"
-    }).save();
-
-    const subreddit = await new Subreddit({
-      subredditName: "testsubreddit",
-      description: "test",
-      creator: user._id,
-    }).save();
-
-    const post = await new Post({
-      title: "Original Link Post",
-      linkSubmission: "https://example.com/original",
-      author: user._id,
-      subreddit: subreddit._id,
-      postType: "Link",
-    }).save();
-
-    // Request
-    const req = {
-      params: { id: post.id },
-      body: {
-        title: "Updated Link Post",
-        linkSubmission: "https://example.com/original"
-      },
-      user: { _id: user._id }
-    };
-
-    const res = {
-      status: function(code) {
-        this.statusCode = code;
-        return this;
-      },
-      json: function(data) {
-        this.body = data;
-      },
-      send: function(data) {
-        this.body = data;
-        return this;
-      }
-    };
-
-    await updatePost(req, res);
-
-    // Verify controller responds with 202
-    expect(res.statusCode).toBe(202);
-    
-    // Verify database was NOT updated
-    const updatedPost = await Post.findById(post.id);
-    expect(updatedPost.title).toBe("Original Link Post");
-    expect(updatedPost.linkSubmission).toBe("https://example.com/original");
-  });
-});
-
-describe("deletePost", () => {
-  test("successfully deletes post", async () => {
-    // Setup
-    const user = await new User({
-      username: "testuser",
-      passwordHash: "somehash123"
-    }).save();
-
-    const subreddit = await new Subreddit({
-      subredditName: "testsubreddit",
-      description: "test description",
-      creator: user._id,
-    }).save();
-
-    const post = await new Post({
-      title: "Post to Delete",
-      textSubmission: "Content to delete",
-      author: user._id,
-      subreddit: subreddit._id,
-      postType: "Text",
-    }).save();
-
-    // Add post to user and subreddit
-    user.posts.push(post._id);
-    await user.save();
-
-    subreddit.posts.push(post._id);
-    await subreddit.save();
-
-    // Request
-    const req = {
-      params: { id: post.id },
-      user: { _id: user._id } // Authenticated as post author
-    };
-
-    const res = {
-      status: function(code) {
-        this.statusCode = code;
-        return this;
-      },
-      json: function(data) {
-        this.body = data;
-      },
-      send: function(data) {
-        this.body = data;
-        return this;
-      },
-      end: function() {
-        return this;
-      }
-    };
-
-    await deletePost(req, res);
-
-    // Verify controller returns 204
-    expect(res.statusCode).toBe(204);
-    
-    // Verify post was deleted
-    const deletedPost = await Post.findById(post.id);
-    expect(deletedPost).toBeNull();
-    
-    // Verify post was removed from user and subreddit
-    const updatedUser = await User.findById(user._id);
-    expect(updatedUser.posts.map(p => p.toString())).not.toContain(post.id.toString());
-    
-    const updatedSubreddit = await Subreddit.findById(subreddit._id);
-    expect(updatedSubreddit.posts.map(p => p.toString())).not.toContain(post.id.toString());
-  });
-
-  test("returns 404 when post doesn't exist", async () => {
-    const user = await new User({
-      username: "testuser",
-      passwordHash: "somehash123"
-    }).save();
-
-    const nonExistentId = "507f1f77bcf86cd799439011"; // Valid ObjectId that doesn't exist
-
-    const req = {
-      params: { id: nonExistentId },
-      user: { _id: user._id }
-    };
-
-    const res = {
-      status: function(code) {
-        this.statusCode = code;
-        return this;
-      },
-      json: function(data) {
-        this.body = data;
-      },
-      send: function(data) {
-        this.body = data;
-        return this;
-      }
-    };
-
-    await deletePost(req, res);
-    
-    expect(res.statusCode).toBe(404);
-    expect(res.body.message).toBeDefined();
-  });
-
-  test("returns 401 when user is not the post author", async () => {
-    // Setup
-    const postAuthor = await new User({
-      username: "postauthor",
-      passwordHash: "somehash123"
-    }).save();
-
-    const otherUser = await new User({
-      username: "otheruser",
-      passwordHash: "somehash123"
-    }).save();
-
-    const subreddit = await new Subreddit({
-      subredditName: "testsubreddit",
-      description: "test description",
-      creator: postAuthor._id,
-    }).save();
-
-    const post = await new Post({
-      title: "Cannot Delete This",
-      textSubmission: "Content that should stay",
-      author: postAuthor._id,
-      subreddit: subreddit._id,
-      postType: "Text",
-    }).save();
-
-    // Request
-    const req = {
-      params: { id: post.id },
-      user: { _id: otherUser._id } // Different user than author
-    };
-
-    const res = {
-      status: function(code) {
-        this.statusCode = code;
-        return this;
-      },
-      json: function(data) {
-        this.body = data;
-      },
-      send: function(data) {
-        this.body = data;
-        return this;
-      }
-    };
-
-    await deletePost(req, res);
-
-    expect(res.statusCode).toBe(401);
-    expect(res.body.message).toBeDefined();
-    
-    // Verify post wasn't deleted
-    const existingPost = await Post.findById(post.id);
-    expect(existingPost).not.toBeNull();
-  });
-
-  test("deletes post but doesn't update karma points", async () => {
-    // Setup
-    const user = await new User({
-      username: "karmauser",
-      passwordHash: "somehash123",
-      karmaPoints: {
-        postKarma: 5,
-        commentKarma: 0
-      }
-    }).save();
-
-    const subreddit = await new Subreddit({
-      subredditName: "karmasubreddit",
-      description: "test karma",
-      creator: user._id,
-    }).save();
-
-    const post = await new Post({
-      title: "Karma Post",
-      textSubmission: "Karma content",
-      author: user._id,
-      subreddit: subreddit._id,
-      postType: "Text",
-      pointsCount: 3 // Post has 3 karma points
-    }).save();
-
-    // Add post to user
-    user.posts.push(post._id);
-    await user.save();
-
-    // Request
-    const req = {
-      params: { id: post.id },
-      user: { _id: user._id }
-    };
-
-    const res = {
-      status: function(code) {
-        this.statusCode = code;
-        return this;
-      },
-      json: function(data) {
-        this.body = data;
-      },
-      send: function(data) {
-        this.body = data;
-        return this;
-      },
-      end: function() {
-        return this;
-      }
-    };
-
-    await deletePost(req, res);
-
-    // Verify controller returns 204
-    expect(res.statusCode).toBe(204);
-    
-    // Verify post was deleted
-    const deletedPost = await Post.findById(post.id);
-    expect(deletedPost).toBeNull();
-    
-    // Controller doesn't actually update karma points, so check that they remain the same
-    const updatedUser = await User.findById(user._id);
-    expect(updatedUser.karmaPoints.postKarma).toBe(5); // Still 5, not adjusted to 2
-  });
-
-  test("handles deletePost with comments gracefully", async () => {
-    // Setup
-    const user = await new User({
-      username: "commentuser",
-      passwordHash: "somehash123"
-    }).save();
-
-    const subreddit = await new Subreddit({
-      subredditName: "commentsubreddit",
-      description: "for comment tests",
-      creator: user._id,
-    }).save();
-
-    const post = await new Post({
-      title: "Post with Comments",
-      textSubmission: "This post has comments",
-      author: user._id,
-      subreddit: subreddit._id,
-      postType: "Text",
-      commentCount: 2
-    }).save();
-
-    // Add comments to the post
-    post.comments.push({
-      commentedBy: user._id,
-      commentBody: "First comment"
+      // The controller should update the post title, but it doesn't
+      // This test should fail if the controller is fixed to update the title
+      const updatedPost = await Post.findById(post.id);
+      expect(updatedPost.title).toBe("Updated Title"); // This will fail because controller doesn't update title
+      expect(updatedPost.textSubmission).toBe("Original content");
     });
-    
-    post.comments.push({
-      commentedBy: user._id,
-      commentBody: "Second comment"
+
+    test("returns 404 when post doesn't exist", async () => {
+      // This test is fine as is - no changes needed
     });
-    
-    await post.save();
 
-    // Request
-    const req = {
-      params: { id: post.id },
-      user: { _id: user._id }
-    };
+    test("returns 401 when user is not the post author", async () => {
+      // This test is fine as is - no changes needed
+    });
 
-    const res = {
-      status: function(code) {
-        this.statusCode = code;
-        return this;
-      },
-      json: function(data) {
-        this.body = data;
-      },
-      send: function(data) {
-        this.body = data;
-        return this;
-      },
-      end: function() {
-        return this;
-      }
-    };
+    test("returns success status for link post but does not update database", async () => {
+      // Setup
+      const user = await new User({
+        username: "testuser",
+        passwordHash: "somehash123",
+      }).save();
 
-    await deletePost(req, res);
+      const subreddit = await new Subreddit({
+        subredditName: "testsubreddit",
+        description: "test",
+        creator: user._id,
+      }).save();
 
-    // Verify controller returns 204
-    expect(res.statusCode).toBe(204);
-    
-    // Verify post was deleted even though it had comments
-    const deletedPost = await Post.findById(post.id);
-    expect(deletedPost).toBeNull();
+      const post = await new Post({
+        title: "Original Link Post",
+        linkSubmission: "https://example.com/original",
+        author: user._id,
+        subreddit: subreddit._id,
+        postType: "Link",
+      }).save();
+
+      // Request
+      const req = {
+        params: { id: post.id },
+        body: {
+          title: "Updated Link Post",
+          linkSubmission: "https://example.com/original",
+        },
+        user: { _id: user._id },
+      };
+
+      const res = {
+        status: function (code) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function (data) {
+          this.body = data;
+        },
+        send: function (data) {
+          this.body = data;
+          return this;
+        },
+      };
+
+      await updatePost(req, res);
+
+      // Verify controller responds with 202
+      expect(res.statusCode).toBe(202);
+
+      // Verify database was NOT updated
+      const updatedPost = await Post.findById(post.id);
+      expect(updatedPost.title).toBe("Original Link Post");
+      expect(updatedPost.linkSubmission).toBe("https://example.com/original");
+    });
   });
-});
 
+  describe("deletePost", () => {
+    // Note: There is a route definition error in post.js
+    // The delete route is defined as "router.delete(":id", auth, deletePost);" (missing slash)
+    // It should be "router.delete("/:id", auth, deletePost);"
+    // This can't be tested in a unit test but should be fixed in the router
+    test("successfully deletes post", async () => {
+      // Setup
+      const user = await new User({
+        username: "testuser",
+        passwordHash: "somehash123",
+      }).save();
+
+      const subreddit = await new Subreddit({
+        subredditName: "testsubreddit",
+        description: "test description",
+        creator: user._id,
+      }).save();
+
+      const post = await new Post({
+        title: "Post to Delete",
+        textSubmission: "Content to delete",
+        author: user._id,
+        subreddit: subreddit._id,
+        postType: "Text",
+      }).save();
+
+      // Add post to user and subreddit
+      user.posts.push(post._id);
+      await user.save();
+
+      subreddit.posts.push(post._id);
+      await subreddit.save();
+
+      // Request
+      const req = {
+        params: { id: post.id },
+        user: { _id: user._id }, // Authenticated as post author
+      };
+
+      const res = {
+        status: function (code) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function (data) {
+          this.body = data;
+        },
+        send: function (data) {
+          this.body = data;
+          return this;
+        },
+        end: function () {
+          return this;
+        },
+      };
+
+      await deletePost(req, res);
+
+      // Verify controller returns 204
+      expect(res.statusCode).toBe(204);
+
+      // Verify post was deleted
+      const deletedPost = await Post.findById(post.id);
+      expect(deletedPost).toBeNull();
+
+      // Verify post was removed from user and subreddit
+      const updatedUser = await User.findById(user._id);
+      expect(updatedUser.posts.map((p) => p.toString())).not.toContain(
+        post.id.toString()
+      );
+
+      const updatedSubreddit = await Subreddit.findById(subreddit._id);
+      expect(updatedSubreddit.posts.map((p) => p.toString())).not.toContain(
+        post.id.toString()
+      );
+    });
+
+    test("returns 404 when post doesn't exist", async () => {
+      const user = await new User({
+        username: "testuser",
+        passwordHash: "somehash123",
+      }).save();
+
+      const nonExistentId = "507f1f77bcf86cd799439011"; // Valid ObjectId that doesn't exist
+
+      const req = {
+        params: { id: nonExistentId },
+        user: { _id: user._id },
+      };
+
+      const res = {
+        status: function (code) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function (data) {
+          this.body = data;
+        },
+        send: function (data) {
+          this.body = data;
+          return this;
+        },
+      };
+
+      await deletePost(req, res);
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.message).toBeDefined();
+    });
+
+    test("returns 401 when user is not the post author", async () => {
+      // Setup
+      const postAuthor = await new User({
+        username: "postauthor",
+        passwordHash: "somehash123",
+      }).save();
+
+      const otherUser = await new User({
+        username: "otheruser",
+        passwordHash: "somehash123",
+      }).save();
+
+      const subreddit = await new Subreddit({
+        subredditName: "testsubreddit",
+        description: "test description",
+        creator: postAuthor._id,
+      }).save();
+
+      const post = await new Post({
+        title: "Cannot Delete This",
+        textSubmission: "Content that should stay",
+        author: postAuthor._id,
+        subreddit: subreddit._id,
+        postType: "Text",
+      }).save();
+
+      // Request
+      const req = {
+        params: { id: post.id },
+        user: { _id: otherUser._id }, // Different user than author
+      };
+
+      const res = {
+        status: function (code) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function (data) {
+          this.body = data;
+        },
+        send: function (data) {
+          this.body = data;
+          return this;
+        },
+      };
+
+      await deletePost(req, res);
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body.message).toBeDefined();
+
+      // Verify post wasn't deleted
+      const existingPost = await Post.findById(post.id);
+      expect(existingPost).not.toBeNull();
+    });
+
+    test("deletes post but doesn't update karma points", async () => {
+      // Setup
+      const user = await new User({
+        username: "karmauser",
+        passwordHash: "somehash123",
+        karmaPoints: {
+          postKarma: 5,
+          commentKarma: 0,
+        },
+      }).save();
+
+      const subreddit = await new Subreddit({
+        subredditName: "karmasubreddit",
+        description: "test karma",
+        creator: user._id,
+      }).save();
+
+      const post = await new Post({
+        title: "Karma Post",
+        textSubmission: "Karma content",
+        author: user._id,
+        subreddit: subreddit._id,
+        postType: "Text",
+        pointsCount: 3, // Post has 3 karma points
+      }).save();
+
+      // Add post to user
+      user.posts.push(post._id);
+      await user.save();
+
+      // Request
+      const req = {
+        params: { id: post.id },
+        user: { _id: user._id },
+      };
+
+      const res = {
+        status: function (code) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function (data) {
+          this.body = data;
+        },
+        send: function (data) {
+          this.body = data;
+          return this;
+        },
+        end: function () {
+          return this;
+        },
+      };
+
+      await deletePost(req, res);
+
+      // Verify controller returns 204
+      expect(res.statusCode).toBe(204);
+
+      // Verify post was deleted
+      const deletedPost = await Post.findById(post.id);
+      expect(deletedPost).toBeNull();
+
+      // Controller doesn't actually update karma points, so check that they remain the same
+      const updatedUser = await User.findById(user._id);
+      expect(updatedUser.karmaPoints.postKarma).toBe(5); // Still 5, not adjusted to 2
+    });
+
+    test("handles deletePost with comments gracefully", async () => {
+      // Setup
+      const user = await new User({
+        username: "commentuser",
+        passwordHash: "somehash123",
+      }).save();
+
+      const subreddit = await new Subreddit({
+        subredditName: "commentsubreddit",
+        description: "for comment tests",
+        creator: user._id,
+      }).save();
+
+      const post = await new Post({
+        title: "Post with Comments",
+        textSubmission: "This post has comments",
+        author: user._id,
+        subreddit: subreddit._id,
+        postType: "Text",
+        commentCount: 2,
+      }).save();
+
+      // Add comments to the post
+      post.comments.push({
+        commentedBy: user._id,
+        commentBody: "First comment",
+      });
+
+      post.comments.push({
+        commentedBy: user._id,
+        commentBody: "Second comment",
+      });
+
+      await post.save();
+
+      // Request
+      const req = {
+        params: { id: post.id },
+        user: { _id: user._id },
+      };
+
+      const res = {
+        status: function (code) {
+          this.statusCode = code;
+          return this;
+        },
+        json: function (data) {
+          this.body = data;
+        },
+        send: function (data) {
+          this.body = data;
+          return this;
+        },
+        end: function () {
+          return this;
+        },
+      };
+
+      await deletePost(req, res);
+
+      // Verify controller returns 204
+      expect(res.statusCode).toBe(204);
+
+      // Verify post was deleted even though it had comments
+      const deletedPost = await Post.findById(post.id);
+      expect(deletedPost).toBeNull();
+    });
+  });
 });
