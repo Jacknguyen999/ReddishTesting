@@ -49,6 +49,10 @@ describe("getUser controller", () => {
         this.statusCode = code;
         return this;
       },
+      send(data) {
+        this.body = data;
+        return this;
+      },
       json(data) {
         this.body = data;
       },
@@ -100,6 +104,10 @@ describe("getUser controller", () => {
         this.statusCode = code;
         return this;
       },
+      send(data) {
+        this.body = data;
+        return this;
+      },
       json(data) {
         this.body = data;
       },
@@ -128,6 +136,10 @@ describe("getUser controller", () => {
         this.statusCode = code;
         return this;
       },
+      send(data) {
+        this.body = data;
+        return this;
+      },
       json(data) {
         this.body = data;
       },
@@ -154,6 +166,10 @@ describe("getUser controller", () => {
         this.statusCode = code;
         return this;
       },
+      send(data) {
+        this.body = data;
+        return this;
+      },
       json(data) {
         this.body = data;
       },
@@ -175,6 +191,10 @@ describe("getUser controller", () => {
       body: null,
       status(code) {
         this.statusCode = code;
+        return this;
+      },
+      send(data) {
+        this.body = data;
         return this;
       },
       json(data) {
@@ -204,6 +224,10 @@ describe("getUser controller", () => {
         this.statusCode = code;
         return this;
       },
+      send(data) {
+        this.body = data;
+        return this;
+      },
       json(data) {
         this.body = data;
       },
@@ -224,6 +248,10 @@ describe("getUser controller", () => {
       body: null,
       status(code) {
         this.statusCode = code;
+        return this;
+      },
+      send(data) {
+        this.body = data;
         return this;
       },
       json(data) {
@@ -248,6 +276,10 @@ describe("getUser controller", () => {
         this.statusCode = code;
         return this;
       },
+      send(data) {
+        this.body = data;
+        return this;
+      },
       json(data) {
         this.body = data;
       },
@@ -268,6 +300,10 @@ describe("getUser controller", () => {
       body: null,
       status(code) {
         this.statusCode = code;
+        return this;
+      },
+      send(data) {
+        this.body = data;
         return this;
       },
       json(data) {
@@ -292,6 +328,10 @@ describe("getUser controller", () => {
         this.statusCode = code;
         return this;
       },
+      send(data) {
+        this.body = data;
+        return this;
+      },
       json(data) {
         this.body = data;
       },
@@ -312,6 +352,10 @@ describe("getUser controller", () => {
       body: null,
       status(code) {
         this.statusCode = code;
+        return this;
+      },
+      send(data) {
+        this.body = data;
         return this;
       },
       json(data) {
@@ -336,6 +380,10 @@ describe("getUser controller", () => {
         this.statusCode = code;
         return this;
       },
+      send(data) {
+        this.body = data;
+        return this;
+      },
       json(data) {
         this.body = data;
       },
@@ -358,6 +406,10 @@ describe("getUser controller", () => {
         this.statusCode = code;
         return this;
       },
+      send(data) {
+        this.body = data;
+        return this;
+      },
       json(data) {
         this.body = data;
       },
@@ -371,12 +423,17 @@ describe("getUser controller", () => {
   test("handles missing query parameters", async () => {
     const req = {
       params: { username: "TestUser" },
+      query: {}, // Empty query object instead of undefined
     };
     const res = {
       statusCode: 0,
       body: null,
       status(code) {
         this.statusCode = code;
+        return this;
+      },
+      send(data) {
+        this.body = data;
         return this;
       },
       json(data) {
@@ -399,6 +456,10 @@ describe("getUser controller", () => {
       body: null,
       status(code) {
         this.statusCode = code;
+        return this;
+      },
+      send(data) {
+        this.body = data;
         return this;
       },
       json(data) {
@@ -432,6 +493,10 @@ describe("getUser controller", () => {
       body: null,
       status(code) {
         this.statusCode = code;
+        return this;
+      },
+      send(data) {
+        this.body = data;
         return this;
       },
       json(data) {

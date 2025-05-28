@@ -209,11 +209,6 @@ describe("Post Test", () => {
         })
       );
     });
-
-    // Removed redundant validation test - consolidated with "validates post type and submission content match" test
-
-    // Removed redundant validation test - consolidated with "validates post type and submission content match" test
-
     test("fails when user is not authorized", async () => {
       const user = new User({
         username: "testuser",
@@ -349,10 +344,6 @@ describe("Post Test", () => {
       }
     });
 
-    // Removed redundant validation test - consolidated with "validates post type and submission content match" test
-
-    // Removed redundant karma test - consolidated with "sets default values correctly" test
-
     test("handles concurrent post creation correctly", async () => {
       const user = new User({
         username: "testuser",
@@ -452,8 +443,6 @@ describe("Post Test", () => {
       expect(postsInDb.length).toBe(0);
     });
 
-    // Removed redundant population test - consolidated with "returns populated post fields correctly" test
-
     test("sets default values correctly", async () => {
       const user = new User({
         username: "testuser",
@@ -512,8 +501,6 @@ describe("Post Test", () => {
       expect(post.author.toString()).toBe(savedUser._id.toString());
       expect(post.subreddit.toString()).toBe(savedSubreddit._id.toString());
     });
-
-    // Removed redundant timestamp test - already covered in "sets default values correctly" test
 
     test("handles special characters in title correctly", async () => {
       const user = new User({
@@ -2377,10 +2364,6 @@ describe("Post Test", () => {
   });
 
   describe("deletePost", () => {
-    // Note: There is a route definition error in post.js
-    // The delete route is defined as "router.delete(":id", auth, deletePost);" (missing slash)
-    // It should be "router.delete("/:id", auth, deletePost);"
-    // This can't be tested in a unit test but should be fixed in the router
     test("successfully deletes post", async () => {
       // Setup
       const user = await new User({
