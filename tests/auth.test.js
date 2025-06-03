@@ -1,7 +1,15 @@
 const { describe, test, expect, beforeEach } = require("@jest/globals");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
+const Post = require("../models/post");
+const Subreddit = require("../models/subreddit");
 const { signupUser, loginUser } = require("../controllers/auth");
+const { upvotePost, downvotePost } = require("../controllers/postVote");
+const {
+  upvoteComment,
+  downvoteComment,
+} = require("../controllers/commentVote");
+const { postComment } = require("../controllers/postComment");
 
 describe("Auth Controller", () => {
   describe("User Signup", () => {
@@ -362,6 +370,316 @@ describe("Auth Controller", () => {
           token: expect.any(String),
         })
       );
+    });
+  });
+
+  describe("Karma Points Integration", () => {
+    let testUser;
+    let anotherUser;
+    let testPost;
+    let testSubreddit;
+
+    beforeEach(async () => {
+      // Create test user with karma points
+      const passwordHash = await bcrypt.hash("password123", 10);
+      testUser = await User.create({
+        username: "karmauser",
+        passwordHash,
+        karmaPoints: {
+          postKarma: 5,
+          commentKarma: 3,
+        },
+      });
+
+      // Create another user for voting
+      anotherUser = await User.create({
+        username: "voter",
+        passwordHash,
+      });
+
+      // Create test subreddit
+      testSubreddit = await Subreddit.create({
+        subredditName: "testkarma",
+        description: "Test subreddit for karma",
+        admin: testUser._id,
+        subscribedBy: [testUser._id],
+      });
+
+      // Create test post
+      testPost = await Post.create({
+        title: "Test Post for Karma",
+        postType: "Text",
+        textSubmission: "This is a test post",
+        author: testUser._id,
+        subreddit: testSubreddit._id,
+        upvotedBy: [testUser._id],
+        pointsCount: 1,
+      });
+    });
+
+    test("should return correct karma in login response", async () => {
+      // Arrange
+      const req = {
+        body: {
+          username: "karmauser",
+          password: "password123",
+        },
+      };
+
+      const res = {
+        status: function () {
+          return this;
+        },
+        json: function () {},
+      };
+
+      const statusSpy = jest.spyOn(res, "status");
+      const jsonSpy = jest.spyOn(res, "json");
+
+      // Act
+      await loginUser(req, res);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(200);
+
+      const responseData = jsonSpy.mock.calls[0][0];
+      expect(responseData).toEqual(
+        expect.objectContaining({
+          username: "karmauser",
+          karma: 8, // 5 post karma + 3 comment karma
+          token: expect.any(String),
+        })
+      );
+    });
+
+    test("should reflect updated karma after post vote in subsequent login", async () => {
+      // Arrange - Simulate another user upvoting the post
+      const upvoteReq = {
+        params: { id: testPost._id.toString() },
+        user: anotherUser._id.toString(),
+      };
+
+      const upvoteRes = {
+        status: function () {
+          return this;
+        },
+        end: function () {},
+      };
+
+      // Act - Upvote the post (should increase karma)
+      await upvotePost(upvoteReq, upvoteRes);
+
+      // Login again to check karma
+      const loginReq = {
+        body: {
+          username: "karmauser",
+          password: "password123",
+        },
+      };
+
+      const loginRes = {
+        status: function () {
+          return this;
+        },
+        json: function () {},
+      };
+
+      const jsonSpy = jest.spyOn(loginRes, "json");
+
+      await loginUser(loginReq, loginRes);
+
+      // Assert - Karma should be updated
+      const responseData = jsonSpy.mock.calls[0][0];
+      expect(responseData.karma).toBe(9); // 6 post karma + 3 comment karma
+    });
+
+    test("should reflect decreased karma after post downvote in subsequent login", async () => {
+      // Arrange - Simulate another user downvoting the post
+      const downvoteReq = {
+        params: { id: testPost._id.toString() },
+        user: anotherUser._id.toString(),
+      };
+
+      const downvoteRes = {
+        status: function () {
+          return this;
+        },
+        end: function () {},
+      };
+
+      // Act - Downvote the post (should decrease karma)
+      await downvotePost(downvoteReq, downvoteRes);
+
+      // Login again to check karma
+      const loginReq = {
+        body: {
+          username: "karmauser",
+          password: "password123",
+        },
+      };
+
+      const loginRes = {
+        status: function () {
+          return this;
+        },
+        json: function () {},
+      };
+
+      const jsonSpy = jest.spyOn(loginRes, "json");
+
+      await loginUser(loginReq, loginRes);
+
+      // Assert - Karma should be decreased
+      const responseData = jsonSpy.mock.calls[0][0];
+      expect(responseData.karma).toBe(7); // 4 post karma + 3 comment karma
+    });
+
+    test("should reflect increased comment karma after comment creation", async () => {
+      // Arrange - Simulate user creating a comment
+      const commentReq = {
+        params: { id: testPost._id.toString() },
+        user: testUser._id.toString(),
+        body: { comment: "This is a test comment" },
+      };
+
+      const commentRes = {
+        status: function () {
+          return this;
+        },
+        json: function () {},
+      };
+
+      // Act - Create a comment (should increase comment karma)
+      await postComment(commentReq, commentRes);
+
+      // Login again to check karma
+      const loginReq = {
+        body: {
+          username: "karmauser",
+          password: "password123",
+        },
+      };
+
+      const loginRes = {
+        status: function () {
+          return this;
+        },
+        json: function () {},
+      };
+
+      const jsonSpy = jest.spyOn(loginRes, "json");
+
+      await loginUser(loginReq, loginRes);
+
+      // Assert - Comment karma should be increased
+      const responseData = jsonSpy.mock.calls[0][0];
+      expect(responseData.karma).toBe(9); // 5 post karma + 4 comment karma
+    });
+
+    test("should handle karma persistence across multiple login sessions", async () => {
+      // Arrange - Perform karma-affecting action
+      const upvoteReq = {
+        params: { id: testPost._id.toString() },
+        user: anotherUser._id.toString(),
+      };
+
+      const upvoteRes = {
+        status: function () {
+          return this;
+        },
+        end: function () {},
+      };
+
+      await upvotePost(upvoteReq, upvoteRes);
+
+      // Act & Assert - Login multiple times and verify karma persists
+      for (let i = 0; i < 3; i++) {
+        const loginReq = {
+          body: {
+            username: "karmauser",
+            password: "password123",
+          },
+        };
+
+        const loginRes = {
+          status: function () {
+            return this;
+          },
+          json: function () {},
+        };
+
+        const jsonSpy = jest.spyOn(loginRes, "json");
+
+        await loginUser(loginReq, loginRes);
+
+        const responseData = jsonSpy.mock.calls[0][0];
+        expect(responseData.karma).toBe(9); // Should be consistent across logins
+      }
+    });
+
+    test("should handle vote toggling correctly in karma calculation", async () => {
+      // Arrange - Initial login to get baseline karma
+      let loginReq = {
+        body: {
+          username: "karmauser",
+          password: "password123",
+        },
+      };
+
+      let loginRes = {
+        status: function () {
+          return this;
+        },
+        json: function () {},
+      };
+
+      let jsonSpy = jest.spyOn(loginRes, "json");
+      await loginUser(loginReq, loginRes);
+      const initialKarma = jsonSpy.mock.calls[0][0].karma;
+
+      // Act - Another user upvotes the post
+      const upvoteReq = {
+        params: { id: testPost._id.toString() },
+        user: anotherUser._id.toString(),
+      };
+
+      const upvoteRes = {
+        status: function () {
+          return this;
+        },
+        end: function () {},
+      };
+
+      await upvotePost(upvoteReq, upvoteRes);
+
+      // Check karma after upvote
+      loginRes = {
+        status: function () {
+          return this;
+        },
+        json: function () {},
+      };
+      jsonSpy = jest.spyOn(loginRes, "json");
+      await loginUser(loginReq, loginRes);
+      const karmaAfterUpvote = jsonSpy.mock.calls[0][0].karma;
+
+      // Same user removes upvote (toggles off)
+      await upvotePost(upvoteReq, upvoteRes);
+
+      // Check karma after removing upvote
+      loginRes = {
+        status: function () {
+          return this;
+        },
+        json: function () {},
+      };
+      jsonSpy = jest.spyOn(loginRes, "json");
+      await loginUser(loginReq, loginRes);
+      const karmaAfterToggle = jsonSpy.mock.calls[0][0].karma;
+
+      // Assert
+      expect(karmaAfterUpvote).toBe(initialKarma + 1); // Karma increased by 1
+      expect(karmaAfterToggle).toBe(initialKarma); // Karma back to original
     });
   });
 });
